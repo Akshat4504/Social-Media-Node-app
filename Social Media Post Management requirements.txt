@@ -1,0 +1,25 @@
+Social Media Post Management using nodejs and mongodb and express
+
+1.User Authentication 
+a. Signup API: 
+- Register : with name, email, password, and profilePicture.
+- Login : Authenticate users and return a JWT token. and make it by userID
+- forget password: send a reset token
+- resetpassword: requires the token generated from fogot password
+- change password: uses token from login which then requires old password new password confirm password
+
+
+B. User Profile API:
+- Fetch user details(name, email, profilePicture, bio, followers(number), following(number)).
+- Update profile (bio, profilePicture).
+- Follow/Unfollow API: Users can follow/unfollow other users.
+
+2.Post Management (CRUD) 
+
+1. Create Post: Users can create a post with title, content, and an optional image.
+2. Get All Posts: Fetch all posts from the database with user details.
+3. Get Single Post: Fetch a post by its ID.
+4. Update Post: Users can update their own posts.
+5. Delete Post: Users can delete their own posts.
+6. Create Image Gallery - User can add description and upload multiple images with the limitations. Max limit will be 10 and min limit will be 3.
+7. Delete Image Gallery : User will be able to delete one image Or multiple image as per their choice.
