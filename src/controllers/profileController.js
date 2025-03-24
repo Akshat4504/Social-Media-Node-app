@@ -29,8 +29,9 @@ const updateUserProfile = async (req, res) => {
 
     if (!user) return res.status(404).json({ msg: 'User not found' });
 
-    if (bio) await User.findByIdAndUpdate(req.user.id, { bio }, { new: true })
-    
+    if (!bio ) { return res.status(400).json({ msg: 'At least bio needs be updated' })}
+
+    if (bio) { user.bio = bio }
 
     if (req.file) {
       const userFolder = path.join(__dirname, '..', 'uploads', 'users', user.email);

@@ -39,6 +39,7 @@ const createPost = async (req, res) => {
   }
 };
 
+// displays all the particular users posts
 const getAllPosts = async (req, res) => {
   try {
     const posts = await Post.find({ user: req.user.id }).populate('user', 'name profilePicture');
@@ -47,6 +48,7 @@ const getAllPosts = async (req, res) => {
     res.status(500).json({ msg: 'Error fetching posts' });
   }
 };
+
 // Get Single Post
 const getSinglePost = async (req, res) => {
   try {
@@ -105,9 +107,11 @@ const updatePost = async (req, res) => {
 const deletePost = async (req, res) => {
   try {
     const post = await Post.findById(req.params.postId);
+    console.log(post)
     if (!post) return res.status(404).json({ msg: 'Post not found' });
 
-    if (post.user.toString() !== req.user.id) {
+    if (post.user !== req.user.id) {
+      console.log(post.user !== req.user.id)
       return res.status(403).json({ msg: 'Unauthorized' });
     }
 

@@ -9,6 +9,6 @@ router.post('/new-post', verifyToken, upload.single('image'), createPost);
 router.get('/all-post', verifyToken, getAllPosts);
 router.get('/:id', verifyToken, getSinglePost);
 router.put('/:id', verifyToken, upload.single('image'), updatePost);
-router.delete('/:id', verifyToken, deletePost);
+router.delete('/delete-post/:id', verifyToken, deletePost);
 
 module.exports = router;

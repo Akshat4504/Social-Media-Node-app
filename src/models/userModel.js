@@ -7,7 +7,7 @@ if (!mongoose.models.User) {
     email: { type: String, required: true, unique: true , lowercase: true, trim: true },
     password: { type: String, required: true },
     profilePicture: { type: String },
-    bio: { type: String, default: '' , trim: true  },
+    bio: { type: String , trim: true  },
     followers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     following: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   });

@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/userModel');
 const upload = require('../middlewares/uploadMiddleware');
 const jwt = require('jsonwebtoken');
+const transporter = require('../config/mailConnect')
 require('dotenv').config();
 
 const register = async (req, res) => {
@@ -71,7 +72,15 @@ const forgotPassword = async (req, res) => {
     const resetToken = jwt.sign({ email: user.email }, process.env.JWT_SECRET, { expiresIn: "15m" });
     resetTokens[user.email] = resetToken;
 
-    res.status(200).json({ message: "Reset token generated", resetToken });
+    await transporter.sendMail({
+      from: process.env.TEST_EMAIL, // sender address
+      to: email, // list of receivers
+      subject: "Password reset request", // Subject line
+      text: resetToken, // plain text body
+    })
+
+
+    res.status(200).json({ message: "Reset token generated"});
   } catch (error) {
     res.status(500).json({ message: "Error generating reset token", error: error.message });
   }
