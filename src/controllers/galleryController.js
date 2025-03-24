@@ -12,7 +12,7 @@ const createGallery = async (req, res) => {
         const files = req.files;
 
         if (!files || files.length < 3 || files.length > 10) {
-            return res.status(400).json({ msg: 'Upload between 3 to 10 images' });
+            return res.status(500).json({ msg: 'Upload between 3 to 10 images' });
         }
 
         const user = await User.findById(req.user.id);

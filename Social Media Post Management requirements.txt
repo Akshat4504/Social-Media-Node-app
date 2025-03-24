@@ -23,3 +23,4 @@ B. User Profile API:
 5. Delete Post: Users can delete their own posts.
 6. Create Image Gallery - User can add description and upload multiple images with the limitations. Max limit will be 10 and min limit will be 3.
 7. Delete Image Gallery : User will be able to delete one image Or multiple image as per their choice.
+
