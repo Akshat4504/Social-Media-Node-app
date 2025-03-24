@@ -16,7 +16,7 @@ const register = async (req, res) => {
     if (!name || !email || !password) return res.status(400).json({ message: "All fields are required" });
 
     if (!isPasswordValid(password)) {
-      return res.status(400).json({ message: "Password must have at least 1 special character, 2 digits, and 1 uppercase letter." });
+      return res.status(400).json({ message: "Password must be 8-20 characters long, have at least 1 special character, 2 digits, and 1 uppercase letter." });
     }
 
     const existingUser = await User.findOne({ email });
@@ -85,7 +85,7 @@ const forgotPassword = async (req, res) => {
     })
 
 
-    res.status(200).json({ message: "Reset token generated"});
+    res.status(200).json({ message: "Reset token generated" });
   } catch (error) {
     res.status(500).json({ message: "Error generating reset token", error: error.message });
   }
@@ -103,7 +103,7 @@ const resetPassword = async (req, res) => {
     if (!user) return res.status(404).json({ message: "User not found" });
 
     if (!isPasswordValid(newPassword)) {
-      return res.status(400).json({ message: "Password must have at least 1 special character, 2 digits, and 1 uppercase letter." });
+      return res.status(400).json({ message: "Password must be 8-20 characters long, have at least 1 special character, 2 digits, and 1 uppercase letter." });
     }
 
     if (await isPasswordReused(user, newPassword)) {
@@ -134,7 +134,7 @@ const changePassword = async (req, res) => {
     if (newPassword !== confirmPassword) return res.status(400).json({ message: "Passwords do not match" });
 
     if (!isPasswordValid(newPassword)) {
-      return res.status(400).json({ message: "Password must have at least 1 special character, 2 digits, and 1 uppercase letter." });
+      return res.status(400).json({ message: "Password must be 8-20 characters long, have at least 1 special character, 2 digits, and 1 uppercase letter." });
     }
 
     const user = await User.findById(req.user.id);
