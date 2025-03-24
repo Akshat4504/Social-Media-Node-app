@@ -1,4 +1,4 @@
-Social Media Post Management using nodejs and mongodb and express
+-Social Media Post Management using nodejs and mongodb and express
 
 1.User Authentication 
 a. Signup API: 
@@ -25,9 +25,6 @@ B. User Profile API:
 7. Delete Image Gallery : User will be able to delete one image Or multiple image as per their choice.
 
 
-forget password node mailer
+password validation
 previous password
-bio update
-update/delete posts
 image gallery
-images should be stored in mongodb

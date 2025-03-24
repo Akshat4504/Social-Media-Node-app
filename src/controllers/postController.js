@@ -2,7 +2,7 @@ const Post = require('../models/postModel');
 const User = require('../models/userModel');
 const path = require('path');
 const fs = require('fs');
-
+const mongoose = require('mongoose');
 
 // Create a Post
 const createPost = async (req, res) => {
@@ -28,7 +28,7 @@ const createPost = async (req, res) => {
       // Save image inside user's post folder
       const imagePath = path.join(userFolder, req.file.filename);
       fs.renameSync(req.file.path, imagePath);
-      
+
       post.image = `/uploads/users/${user.email}/posts/${req.file.filename}`;
     }
 
@@ -40,7 +40,7 @@ const createPost = async (req, res) => {
 };
 
 // displays all the particular users posts
-const getAllPosts = async (req, res) => {
+const getAllPostsOfUser = async (req, res) => {
   try {
     const posts = await Post.find({ user: req.user.id }).populate('user', 'name profilePicture');
     res.status(200).json(posts);
@@ -49,10 +49,28 @@ const getAllPosts = async (req, res) => {
   }
 };
 
-// Get Single Post
+// Get All Posts
+const getAllPosts = async (req, res) => {
+  try {
+    const posts = await Post.find().populate('user', 'name profilePicture');
+    res.status(200).json(posts);
+  } catch (error) {
+    console.error('Error:', error.message);
+    res.status(500).json({ msg: 'Error fetching posts' });
+  }
+};
+
+// Get a single post
 const getSinglePost = async (req, res) => {
   try {
-    const post = await Post.findById(req.params.postId).populate('user', 'name profilePicture');
+    const { postId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(postId)) {
+      return res.status(400).json({ msg: 'Invalid Post ID' });
+    }
+
+    const post = await Post.findById(postId).populate('user', 'name profilePicture');
+
     if (!post) return res.status(404).json({ msg: 'Post not found' });
 
     res.status(200).json(post);
@@ -65,7 +83,9 @@ const getSinglePost = async (req, res) => {
 const updatePost = async (req, res) => {
   try {
     const { title, content } = req.body;
-    const post = await Post.findById(req.params.postId);
+    const { postId } = req.params;
+    
+    const post = await Post.findById(postId);
     if (!post) return res.status(404).json({ msg: 'Post not found' });
 
     if (post.user.toString() !== req.user.id) {
@@ -83,7 +103,6 @@ const updatePost = async (req, res) => {
         fs.mkdirSync(userFolder, { recursive: true });
       }
 
-      // Delete old image if it exists
       if (post.image) {
         const oldImagePath = path.join(__dirname, '..', post.image);
         if (fs.existsSync(oldImagePath)) {
@@ -99,6 +118,7 @@ const updatePost = async (req, res) => {
     await post.save();
     res.status(200).json({ msg: 'Post updated successfully', post });
   } catch (error) {
+    console.error('Error updating post:', error.message);
     res.status(500).json({ msg: 'Error updating post' });
   }
 };
@@ -106,16 +126,15 @@ const updatePost = async (req, res) => {
 // Delete Post
 const deletePost = async (req, res) => {
   try {
-    const post = await Post.findById(req.params.postId);
-    console.log(post)
+    const { postId } = req.params;
+
+    const post = await Post.findById(postId);
     if (!post) return res.status(404).json({ msg: 'Post not found' });
 
-    if (post.user !== req.user.id) {
-      console.log(post.user !== req.user.id)
+    if (post.user.toString() !== req.user.id) {
       return res.status(403).json({ msg: 'Unauthorized' });
     }
 
-    // Delete the image if it exists
     if (post.image) {
       const imagePath = path.join(__dirname, '..', post.image);
       if (fs.existsSync(imagePath)) {
@@ -126,9 +145,10 @@ const deletePost = async (req, res) => {
     await post.deleteOne();
     res.status(200).json({ msg: 'Post deleted successfully' });
   } catch (error) {
+    console.error('Error deleting post:', error.message);
     res.status(500).json({ msg: 'Error deleting post' });
   }
 };
 
 
-module.exports = { createPost, getAllPosts, getSinglePost, updatePost, deletePost };
+module.exports = { createPost, getAllPostsOfUser, getSinglePost, updatePost, deletePost,getAllPosts };

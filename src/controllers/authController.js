@@ -7,18 +7,23 @@ const jwt = require('jsonwebtoken');
 const transporter = require('../config/mailConnect')
 require('dotenv').config();
 
+
+
+// Register
 const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
     if (!name || !email || !password) return res.status(400).json({ message: "All fields are required" });
 
+    if (!isPasswordValid(password)) {
+      return res.status(400).json({ message: "Password must have at least 1 special character, 2 digits, and 1 uppercase letter." });
+    }
+
     const existingUser = await User.findOne({ email });
     if (existingUser) return res.status(409).json({ message: "Email already exists" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({ name, email, password: hashedPassword });
-
-    await newUser.save();
+    const newUser = new User({ name, email, password: hashedPassword, previousPasswords: [hashedPassword] });
 
     if (req.file) {
       const userFolder = path.join(__dirname, '..', 'uploads', 'users', email);
@@ -29,9 +34,9 @@ const register = async (req, res) => {
       fs.renameSync(req.file.path, newPath);
 
       newUser.profilePicture = `/uploads/users/${email}/${req.file.filename}`;
-      await newUser.save();
     }
 
+    await newUser.save();
     res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
     res.status(500).json({ message: "Registration failed", error: error.message });
@@ -86,6 +91,7 @@ const forgotPassword = async (req, res) => {
   }
 };
 
+// Reset Password
 const resetPassword = async (req, res) => {
   try {
     const { email, token, newPassword } = req.body;
@@ -96,7 +102,20 @@ const resetPassword = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    user.password = await bcrypt.hash(newPassword, 10);
+    if (!isPasswordValid(newPassword)) {
+      return res.status(400).json({ message: "Password must have at least 1 special character, 2 digits, and 1 uppercase letter." });
+    }
+
+    if (await isPasswordReused(user, newPassword)) {
+      return res.status(400).json({ message: "New password cannot be the same as the previous 3 passwords." });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    user.password = hashedPassword;
+    user.previousPasswords.unshift(hashedPassword);
+    if (user.previousPasswords.length > 3) user.previousPasswords.pop();
+
     await user.save();
     delete resetTokens[email];
 
@@ -106,6 +125,7 @@ const resetPassword = async (req, res) => {
   }
 };
 
+// Change Password
 const changePassword = async (req, res) => {
   try {
     const { oldPassword, newPassword, confirmPassword } = req.body;
@@ -113,13 +133,25 @@ const changePassword = async (req, res) => {
 
     if (newPassword !== confirmPassword) return res.status(400).json({ message: "Passwords do not match" });
 
+    if (!isPasswordValid(newPassword)) {
+      return res.status(400).json({ message: "Password must have at least 1 special character, 2 digits, and 1 uppercase letter." });
+    }
+
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const isMatch = await bcrypt.compare(oldPassword, user.password);
     if (!isMatch) return res.status(401).json({ message: "Old password is incorrect" });
 
-    user.password = await bcrypt.hash(newPassword, 10);
+    if (await isPasswordReused(user, newPassword)) {
+      return res.status(400).json({ message: "New password cannot be the same as the previous 3 passwords." });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    user.previousPasswords.unshift(hashedPassword);
+    if (user.previousPasswords.length > 3) user.previousPasswords.pop();
+
     await user.save();
 
     res.status(200).json({ message: "Password changed successfully" });
@@ -127,6 +159,21 @@ const changePassword = async (req, res) => {
     res.status(500).json({ message: "Error changing password", error: error.message });
   }
 };
+
+// Password validation function
+const isPasswordValid = (password) => {
+  return User.validatePassword(password);
+};
+
+// Check password reuse
+const isPasswordReused = async (user, newPassword) => {
+  const match = await Promise.all(
+    user.previousPasswords.map(async (prev) => await bcrypt.compare(newPassword, prev))
+  );
+  return match.includes(true);
+};
+
+
 
 module.exports = {
   register,
